@@ -1,0 +1,18 @@
+{
+  "name": "npi-light-client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.3",
+    "ledstripe": "https://github.com/flimshaw/ledstripe.git",
+    "onoff": "^1.0.3",
+    "sleep": "^3.0.0",
+    "ws": "^0.8.0"
+  }
+}
