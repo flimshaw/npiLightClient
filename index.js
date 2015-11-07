@@ -2,7 +2,8 @@
 var GPIO = require('onoff').Gpio,
     button = new GPIO(17, 'in', 'both'),
     myLedStripe = require('ledstripe'),
-    sleep = require('sleep');
+    sleep = require('sleep'),
+    Twitter = require('twitter');
 
 var numLEDs = 4,
     ledStripeType = 'LPD8806',
@@ -11,7 +12,8 @@ var numLEDs = 4,
     colorBuffer = [],
     buttonStatus = 0,
     updateInterval = 50,
-    currentColor = [0,0,0];
+    currentColor = [0,0,0],
+    tweetColor = [0,0xff,0x99];
 
 // default to off for all leds
 for( var i = 0; i < numLEDs; i++ ) {
@@ -20,7 +22,7 @@ for( var i = 0; i < numLEDs; i++ ) {
 
 myLedStripe.connect( numLEDs, ledStripeType, spiChannel );
 
-
+// blink three times at startup
 for( var i = 0; i < 3; i++ ) {
   myLedStripe.fill(0x00, 0xff, 0x00);
   sleep.usleep( 250000 );
@@ -28,6 +30,27 @@ for( var i = 0; i < 3; i++ ) {
   sleep.usleep( 250000 );
 }
 
+var client = new Twitter({
+  consumer_key: 'VC9jz2n0IsAiV7VLEy2vQ',
+  consumer_secret: 'ANhMXs75Ui43v1w8K48LnBJYkL5FL7nHHqxbnCzs',
+  access_token_key: '11426712-uL9idsz8japVGMuDbfaR7HRXl64Ek45BbLsyVRmJh',
+  access_token_secret: '1OqfgkoPP89qdD27M9Vxs3xH9pxUVV0fEDaVIekOLg1eS'
+});
+
+function unshiftColor( color ) {
+  colorBuffer.unshift( color );
+}
+
+client.stream('statuses/filter', {track: 'FML'}, function(stream) {                                                                                         
+  stream.on('data', function(tweet) {
+    unshiftColor( tweetColor );
+    console.log(tweet.text);
+  });
+
+  stream.on('error', function(error) {
+    throw error;
+  });
+});
 
 myLedStripe.fill(0x00, 0x00, 0x00);
 
@@ -40,11 +63,15 @@ function getRandomColor() {
 function updateColors() {
 
   colorBuffer.pop();
-  
-  if( buttonStatus === 1 ) {
-    colorBuffer.unshift( currentColor );
-  } else {
-    colorBuffer.unshift( [0,0,0] );
+
+  if( colorBuffer.length <= 4 ) {
+
+    if( buttonStatus === 1 ) {
+      unshiftColor( currentColor );
+    } else {
+      unshiftColor( [0,0,0] );
+    }
+
   }
 
   for( var i = 0; i < numLEDs; i++ ) {
